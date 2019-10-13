@@ -1,0 +1,196 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+</style>
+<title>CS 184 Mesh Editor</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2019</h1>
+<h1 align="middle">Project 2: Mesh Editor</h1>
+<h2 align="middle">Aditya Garg</h2>
+
+<br><br>
+
+<div>
+
+<h2 align="middle">Overview</h2>
+<p>Give a high-level overview of what you implemented in this project. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the project.</p>
+
+<p>I created a tool that can load and edit mesh files. I also implemented an upsampling algorithm that can take a blocky mesh and return an object that is more detailed. The most interesting aspect of this project for me was seeing how linked lists and linked list operations have a practical purpose. Up until this point, Ive been studying them for interviews and haven't seen any real use case for them. </p>
+
+<h2 align="middle">Section I: Bezier Curves and Surfaces</h2>
+
+<h3 align="middle">Part 1: Bezier curves with 1D de Casteljau subdivision</h3>
+
+
+<p>de Casteljau's algorithm is a recursive algorithm that takes a series of "control points" (a set of points that defines a bezier curve) and generates a new set of control points for a given t. It generates a new point by linearly interpolating between 2 surrounding points according to the formula b0_prime = (1-t)*b0+t*b1. On the next iteration, the algorithm will use this new batch of prime values to calculate another set of values. This continues until only 1 point remains </p>
+
+
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="pics/p1/1.png" align="middle" width="400px"/>
+      </td>
+      <td>
+	
+        <img src="pics/p1/2.png" align="middle" width="400px"/>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="pics/p1/3.png" align="middle" width="400px"/>
+      </td>
+      
+      <td>
+        <img src="pics/p1/4.png" align="middle" width="400px"/>
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <img src="pics/p1/5.png" align="middle" width="400px"/>
+      </td>
+      
+      <td>
+        <img src="pics/p1/6.png" align="middle" width="400px"/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <img src="pics/p1/7.png" align="middle" width="400px"/>
+      </td>
+      
+      <td>
+        <img src="pics/p1/8.png" align="middle" width="400px"/>
+      </td>
+    </tr>
+  </table>
+</div>
+
+
+<h3 align="middle">Part 2: Bezier surfaces with separable 1D de Casteljau subdivision</h3>
+
+<p> de Casteljau's algorithm extends to the 2d case quite easily. We simply look at 4  sets of points and lerp those as we did in the 1d case with respect to u. Then we take the resulting 4 points from those 4 rows, and lerp them with respect to v. I implemented this algorithm exactly as described with a triple for loops. </p>
+
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="pics/p2/1.png" align="middle" width="400px"/>
+      </td>
+      <td>
+    </tr>
+  </table>
+</div>
+
+<h2 align="middle">Section II: Sampling</h2>
+
+<h3 align="middle">Part 3: Average normals for half-edge meshes</h3>
+
+<p> Since this function is being called from a vertex, I first get the half edge pointing away that is associated. Then I get its twin and create a new pointer to this value. To get the area weighted average normal of this face I need to take the cross product of the twin (which is facing towards the original vertex) and the half edge that is not associated with the vertex (next next of the twin). I add this to a Vector3D variable. I then move on to the next face (by iterating in a do while loop) by h = h->next()-twin(), which returns the half edge associated with the next face that is pointing towards the original vertex. This process continues for all faces and  I exit when we return to the original twin. Then I return a normalized version of this. </p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="pics/p3/1.png" align="middle" width="400px"/>
+      </td>
+       <td>
+        <img src="pics/p3/2.png" align="middle" width="400px"/>
+      </td>
+    </tr>
+  </table>
+</div>
+
+
+<h3 align="middle">Part 4: Half-edge flip</h3>
+
+<p> I implemented the flip operation by first drawing a picture of 2 connected triangles sharing a common edge. I then labeled all the half edges, edges, vertices, and faces on the diagram. I then drew a second picture of a successful flip operation and then relabeled all the elements. I then meticulously made references to ALL the elements and hand reassigned them. I didnt use the convenience method because I felt it was easier to reassign the pointers one by one. I also didnt have any crazy debugging adventures. </p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="pics/p4/1.png" align="middle" width="400px"/>
+      </td>
+       <td>
+        <img src="pics/p4/2.png" align="middle" width="400px"/>
+      </td>
+    </tr>
+  </table>
+</div>
+
+
+<h3 align="middle">Part 5: Half-edge split</h3>
+
+<p> I implemented the split operation by first drawing a picture of 2 connected triangles sharing a common edge. I then labeled all the half edges, edges, vertices, and faces on the diagram. I then drew a second picture of a successful split operation and then relabeled all the elements. This involved creating 1 new vertex, 2 new faces, 3 new edges, and 6 new half edges. To assign the position of the new halfedge, I averaged the positions of the 2 vectors associated with e0. I then meticulously hand reassigned all the elements. I didnt use the convenience method because I felt it was easier to reassign the pointers one by one. I also didnt have any crazy debugging adventures. </p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="pics/p4/1.png" align="middle" width="400px"/>
+      </td>
+       <td>
+        <img src="pics/p5/2.png" align="middle" width="400px"/>
+      </td>
+       <td>
+        <img src="pics/p5/3.png" align="middle" width="400px"/>
+      </td>
+    </tr>
+  </table>
+</div>
+
+
+<h3 align="middle">Part 6: Loop subdivision for mesh upsampling</h3>
+
+<p> I created multiple for loops to carry out this algorithm. I first created a vertex for loop that iterates through each vertex and does a couple things. It appends it to an original vector list, sets the isNew to false, and calculates the new position by using the formula provided. I then created a edge for loop that simply appends all edges to an original edge list and sets the isNew to false. I create a second edge for loop that calculates the new position for each soon to be created vertex. I then iterate through the original edge list and split each of the edges. With the returned vertex I am able to set it to new, set its position to the one previously calculated, set the half edge it points to as old (something I changed in my p5 implementation), and through careful linkedlist operations, set the other 2 edges to new. Now, I iterate through the edges again and check if its new. If it is, I get both half edges and their vertexes. If 1 vertex is old and 1 is new, then I flip that edge. Finally I create a for loop that iterates through the original vector list and updates all of its positions to the ones previously calculated. This solution is definitely not the most efficient, but it was the simplest to implement and debug.  </p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="pics/p6/2.png" align="middle" width="400px"/>
+      </td>
+       <td>
+        <img src="pics/p6/3.png" align="middle" width="400px"/>
+      </td>
+       <td>
+        <img src="pics/p6/4.png" align="middle" width="400px"/>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>Sometimes "dimples" form when I use loop subdivision especially on the corners (as can be seen in the third image. I try and alleviate this effect by pre splitting some of the edges. Its important to note that over pre splitting leads to a completely different shape.</p>
+
+
+<h2 align="middle">Section III: Mesh Competition</h2>
+<p>If you are not participating in the optional mesh competition, don't worry about this section!</p>
+
+<h3 align="middle">Part 7: Design your own mesh!</h3>
+
+</body>
+</html>
